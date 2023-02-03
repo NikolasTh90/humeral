@@ -43,15 +43,27 @@
 
 
 import asyncio
-import websockets
+import websockets, random
+
+
+def compose_message(id):
+    message = id
+    for i in range(9):
+        message+= ',' + str(random.randrange(-10,10))
+    return message    
+    
 
 
 async def handler(websocket, path):
     while True:
-        message = "4,0.23,0.20,-10.60,0.03,-0.03,-0.03,-4.74,-49.18,-35.02"
+        message = compose_message('4')
         await websocket.send(message)
         print(f'sent {message}')
-        await asyncio.sleep(1)
+
+        message = compose_message('2')
+        await websocket.send(message)
+        print(f'sent {message}')
+        # await asyncio.sleep(0.067)
 
 start_server = websockets.serve(handler, 'localhost', 1234)
 

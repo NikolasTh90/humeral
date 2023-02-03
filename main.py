@@ -1,7 +1,23 @@
 from IMU import IMU
 import time
-imu_tag4 = IMU('127.0.0.1', 4, 'ws://127.0.0.1:1234')
-imu_tag2 = IMU('127.0.0.1',  2,  'ws://127.0.0.1:1234')
-time.sleep(5)
-print(imu_tag4.data)
-print(imu_tag2.data)
+import pyrr
+import math
+from pyvqf import PyVQF
+import numpy as np
+imu_tag0 = IMU('192.168.0.101', 0)
+imu_tag4 = IMU('192.168.0.102',  4)
+while True:
+    if imu_tag0.quat9D is not None and imu_tag4.quat9D is not None:
+        q1 = imu_tag0.quat9D
+        q2 = imu_tag4.quat9D
+        # q_mul = pyrr.quaternion.dot(q1, pyrr.quaternion.inverse(q2))
+        q_mul = PyVQF.quatMultiply(q1, PyVQF.quatConj(q2))
+        print(q_mul)
+        norm = np.linalg.norm(q_mul[:3],1)
+        print(norm)
+        try:
+            theta = 2*math.asin(norm)
+            print(math.degrees(theta))
+        except:
+            print("beyond limits")    
+        time.sleep(0.1)
