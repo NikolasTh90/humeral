@@ -20,4 +20,5 @@ while True:
             print(math.degrees(theta))
         except:
             print("beyond limits")    
-        time.sleep(0.1)
+        print(time.time() - imu_tag0.start_time)
+        exit()

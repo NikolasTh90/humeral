@@ -1,21 +1,22 @@
-# var ws = new WebSocket("ws://192.168.10.186/ws");
-# ws.onopen = function() {
-# console.log("Connected");
-# };
-# ws.onmessage = function(evt) {
-# console.log(evt.data);
-# };
-
+# This is a class that represents each IMU
+# Make an instance of this class using the constructor IMU(ip, id), example: IMU('192.168.0.100',4)
+# The default websocket url is 'ws://<ip>/ws' with the default port 80. The default frequency is 10
+# Optionally you can set a custom url for the websocket connection or change the default frequency, example: IMU('192.168.0.100,4,url=http://192.168.0.100, hz=15)
 import  websocket
 import  threading
 import numpy as np
 from pyvqf import PyVQF
-import pyrr
+import pyrr, time
 class IMU:
 
+# Updates the data dictionary of the IMU instance.
+# in : data (the string from the websocket connection the IMU sends)
     def update_data(self, data):
+        # create a new dictionary with appropriate tags
         keys = ['id', 'accx', 'accy', 'accz', 'gyrx', 'gyry', 'gyrz', 'magx', 'magy', 'magz']
+        # split the string on ',' and put the values to the dictionary
         data = dict(zip(keys, data.split(',')))
+        
         data['id'] = int(data['id'])
         data['accx'] = float(data['accx'])
         data['accy'] = float(data['accy'])
@@ -33,23 +34,12 @@ class IMU:
             self.data['previous'] = self.data['current']
         self.data['current'] =  data 
 
-
-
-    # async def listen(self):
-    #     async with websockets.connect('ws://127.0.0.1:1234') as conn:
-    #         await conn.send('Hello, world')
-            # message = await conn.recv()
-            # print(message)
-            # data = message
-            # self.update_data(data)
-            # print(self.data)
-            # self.run_main_code()ß
-
     def listen_ws(self):
         self.ws.run_forever() 
 
     def on_message(self, ws, msg):
         # print("Message Arrived on "+ str(self.id) +":"  + msg)
+        self.start_time = time.time()
         self.update_data(msg)
         gyr = np.array([self.data['current']['gyrx'], self.data['current']['gyry'], self.data['current']['gyrz']])
         acc = np.array([self.data['current']['accx'], self.data['current']['accy'], self.data['current']['accz']])
@@ -84,6 +74,7 @@ class IMU:
         self.vqf = PyVQF(self.frequency_time)
         self.quat6D = None
         self.quat9D = None
+        self.start_time = 0
 
         if not url:
             self.url = 'ws://' + self.ip + '/ws'
