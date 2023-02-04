@@ -8,8 +8,10 @@ imu_tag0 = IMU('192.168.0.101', 0)
 imu_tag4 = IMU('192.168.0.102',  4)
 while True:
     if imu_tag0.quat9D is not None and imu_tag4.quat9D is not None:
-        q1 = imu_tag0.quat9D
+        # change between quat9D and quat6D
+        q1 = imu_tag0.quat9D 
         q2 = imu_tag4.quat9D
+        
         # q_mul = pyrr.quaternion.dot(q1, pyrr.quaternion.inverse(q2))
         q_mul = PyVQF.quatMultiply(q1, PyVQF.quatConj(q2))
         print(q_mul)
@@ -20,5 +22,9 @@ while True:
             print(math.degrees(theta))
         except:
             print("beyond limits")    
-        print(time.time() - imu_tag0.start_time)
-        exit()
+        
+        # uncomment the line below to see the calculation of each message
+        # print(time.time() - imu_tag0.start_time)
+        # exit()
+        #comment this line out when calculating times
+        time.sleep(0.1)
