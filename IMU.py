@@ -7,7 +7,16 @@ import  threading
 import numpy as np
 from pyvqf import PyVQF
 import pyrr, time
+import pickle
 class IMU:
+
+    def save_data(self, filename=None):
+        if not filename:
+            filename = 'imu_tag_'+str(self.id)+'_data.pickle'             
+        with open(filename, 'wb+') as file:
+            pickle.dump(self.data_list, file)
+        
+
 
 # Updates the data dictionary of the IMU instance.
 # in : data (the string from the websocket connection the IMU sends)
@@ -30,9 +39,8 @@ class IMU:
 
         if self.id != int(data['id']):
             return
-        if self.data['current'] is not None:
-            self.data['previous'] = self.data['current']
-        self.data['current'] =  data 
+        self.data =  data 
+        self.data_list.append(self.data)
 
     def listen_ws(self):
         self.ws.run_forever() 
@@ -41,12 +49,13 @@ class IMU:
         # print("Message Arrived on "+ str(self.id) +":"  + msg)
         self.start_time = time.time()
         self.update_data(msg)
-        gyr = np.array([self.data['current']['gyrx'], self.data['current']['gyry'], self.data['current']['gyrz']])
-        acc = np.array([self.data['current']['accx'], self.data['current']['accy'], self.data['current']['accz']])
-        mag = np.array([self.data['current']['magx'], self.data['current']['magy'], self.data['current']['magz']])
-        self.vqf.update(gyr, acc, mag)
+        self.save_data()
+        # gyr = np.array([self.data['current']['gyrx'], self.data['current']['gyry'], self.data['current']['gyrz']])
+        # acc = np.array([self.data['current']['accx'], self.data['current']['accy'], self.data['current']['accz']])
+        # mag = np.array([self.data['current']['magx'], self.data['current']['magy'], self.data['current']['magz']])
+        # self.vqf.update(gyr, acc, mag)
         # self.quat6D = self.vqf.getQuat6D()
-        self.quat9D = self.vqf.getQuat9D()
+        # self.quat9D = self.vqf.getQuat9D()
         # print(self.quat6D)
         
 
@@ -68,13 +77,14 @@ class IMU:
         self.ip = ip
         self.id = id
         self.url = url
-        self.data = {'current': None, 'previous': None}
+        self.data = {}
         self.frequenzy = hz
         self.frequency_time = 1/hz
         self.vqf = PyVQF(self.frequency_time)
         self.quat6D = None
         self.quat9D = None
         self.start_time = 0
+        self.data_list = []
 
         if not url:
             self.url = 'ws://' + self.ip + '/ws'
